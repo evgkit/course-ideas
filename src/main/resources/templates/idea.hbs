@@ -1,0 +1,19 @@
+
+{{#partial "title"}}{{ idea.title }}{{/partial}}
+
+{{#partial "content"}}
+    <h1>{{ idea.title }}</h1>
+
+    <p>Title: {{ idea.title }}</p>
+    <p>Creator: {{ idea.creator }}</p>
+    <p>Code: {{ idea.slug }}</p>
+    <p>Votes: {{ idea.voteCount }}</p>
+    <p>Voters:</p>
+    <ul>
+        {{#each idea.voters}}
+            <li>{{ this }}</li>
+        {{/each}}
+    </ul>
+{{/partial}}
+
+{{> layout.hbs }}

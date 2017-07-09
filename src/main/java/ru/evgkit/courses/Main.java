@@ -15,7 +15,7 @@ public class Main {
     public static void main(String[] args) {
         staticFileLocation("/public");
 
-        CourseIdeaDAO dao = new SimpleCourseIdeaDAO();
+        CourseIdeaDAO courseIdeaDAO = new SimpleCourseIdeaDAO();
 
         before((request, response) -> {
             String username = request.cookie("username");
@@ -44,17 +44,31 @@ public class Main {
 
         get("/ideas", (request, response) -> {
             Map<String, Object> model = new HashMap<>();
-            model.put("ideas", dao.findAll());
+            model.put("ideas", courseIdeaDAO.findAll());
 
             return new ModelAndView(model, "ideas.hbs");
         }, new HandlebarsTemplateEngine());
 
         post("/ideas", (request, response) -> {
-            dao.add(new CourseIdea(
+            courseIdeaDAO.add(new CourseIdea(
                     request.queryParams("title"),
                     request.attribute("username"))
             );
             response.redirect("/ideas");
+            return null;
+        });
+
+        get("ideas/:slug", (request, response) -> {
+            Map<String, Object> model = new HashMap<>();
+            model.put("idea", courseIdeaDAO.findBySlug(request.params("slug")));
+            return new ModelAndView(model, "idea.hbs");
+        }, new HandlebarsTemplateEngine());
+
+        post("/ideas/:slug/vote", (request, response) -> {
+            String slug = request.params("slug");
+            CourseIdea idea = courseIdeaDAO.findBySlug(slug);
+            idea.addVoter(request.attribute("username"));
+            response.redirect("/ideas/" + slug);
             return null;
         });
     }

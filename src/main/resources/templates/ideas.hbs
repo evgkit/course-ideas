@@ -1,11 +1,16 @@
 {{#partial "title"}}All course ideas{{/partial}}
 
 {{#partial "content"}}
-    <h1>Current ideas</h1>
+    <h1>All course ideas</h1>
 
     <ul>
         {{#each ideas}}
-            <li>{{ title }}</li>
+            <li>
+                <form action="/ideas/{{ slug }}/vote" method="post">
+                    <a href="/ideas/{{ slug }}">{{ title }}</a> ({{ voteCount }} votes)
+                    <button>Vote</button>
+                </form>
+            </li>
         {{/each}}
     </ul>
 
