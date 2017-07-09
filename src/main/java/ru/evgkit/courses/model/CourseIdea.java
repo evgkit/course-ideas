@@ -3,7 +3,9 @@ package ru.evgkit.courses.model;
 import com.github.slugify.Slugify;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class CourseIdea {
@@ -35,8 +37,8 @@ public class CourseIdea {
         return voters.size();
     }
 
-    public Set<String> getVoters() {
-        return voters;
+    public List<String> getVoters() {
+        return new ArrayList<>(voters);
     }
 
     @Override

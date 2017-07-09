@@ -2,6 +2,7 @@ package ru.evgkit.courses;
 
 import ru.evgkit.courses.model.CourseIdea;
 import ru.evgkit.courses.model.CourseIdeaDAO;
+import ru.evgkit.courses.model.NotFoundException;
 import ru.evgkit.courses.model.SimpleCourseIdeaDAO;
 import spark.ModelAndView;
 import spark.template.handlebars.HandlebarsTemplateEngine;
@@ -70,6 +71,13 @@ public class Main {
             idea.addVoter(request.attribute("username"));
             response.redirect("/ideas/" + slug);
             return null;
+        });
+
+        exception(NotFoundException.class, (exception, request, response) -> {
+            response.status(404);
+            HandlebarsTemplateEngine engine = new HandlebarsTemplateEngine();
+            String html = engine.render(new ModelAndView(null, "not-found.hbs"));
+            response.body(html);
         });
     }
 }
