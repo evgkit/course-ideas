@@ -5,6 +5,7 @@ import ru.evgkit.courses.model.CourseIdeaDAO;
 import ru.evgkit.courses.model.NotFoundException;
 import ru.evgkit.courses.model.SimpleCourseIdeaDAO;
 import spark.ModelAndView;
+import spark.Request;
 import spark.template.handlebars.HandlebarsTemplateEngine;
 
 import java.util.HashMap;
@@ -13,6 +14,8 @@ import java.util.Map;
 import static spark.Spark.*;
 
 public class Main {
+    private static final String FLASH_MESSAGE_KEY = "flash_message";
+
     public static void main(String[] args) {
         staticFileLocation("/public");
 
@@ -28,6 +31,8 @@ public class Main {
         get("/", (request, response) -> {
             Map<String, String> model = new HashMap<>();
             model.put("username", request.attribute("username"));
+            model.put("flashMessage", popupFlashMessageKey(request));
+
             return new ModelAndView(model, "index.hbs");
         }, new HandlebarsTemplateEngine());
 
@@ -39,13 +44,16 @@ public class Main {
 
         before("/ideas", (request, response) -> {
             if (null == request.attribute("username")) {
+                setFlashMessage(request, "Whoops, please sign in first!");
                 response.redirect("/");
+                halt();
             }
         });
 
         get("/ideas", (request, response) -> {
             Map<String, Object> model = new HashMap<>();
             model.put("ideas", courseIdeaDAO.findAll());
+            model.put("flashMessage", popupFlashMessageKey(request));
 
             return new ModelAndView(model, "ideas.hbs");
         }, new HandlebarsTemplateEngine());
@@ -66,10 +74,12 @@ public class Main {
         }, new HandlebarsTemplateEngine());
 
         post("/ideas/:slug/vote", (request, response) -> {
-            String slug = request.params("slug");
-            CourseIdea idea = courseIdeaDAO.findBySlug(slug);
-            idea.addVoter(request.attribute("username"));
-            response.redirect("/ideas/" + slug);
+            CourseIdea idea = courseIdeaDAO.findBySlug(request.params("slug"));
+
+            boolean isAdded = idea.addVoter(request.attribute("username"));
+            setFlashMessage(request, isAdded ? "Your vote accepted!" : "You already voted!") ;
+
+            response.redirect("/ideas");
             return null;
         });
 
@@ -79,5 +89,27 @@ public class Main {
             String html = engine.render(new ModelAndView(null, "not-found.hbs"));
             response.body(html);
         });
+    }
+
+    private static void setFlashMessage(Request request, String message) {
+        request.session().attribute(FLASH_MESSAGE_KEY, message);
+    }
+
+    private static String getFlashMessageKey(Request request) {
+        if (request.session(false) == null) {
+            return null;
+        }
+        if (!request.session().attributes().contains(FLASH_MESSAGE_KEY)) {
+            return null;
+        }
+        return (String) request.session().attribute(FLASH_MESSAGE_KEY);
+    }
+
+    private static String popupFlashMessageKey(Request request) {
+        String flashMessage = getFlashMessageKey(request);
+        if (null != flashMessage) {
+            request.session().removeAttribute(FLASH_MESSAGE_KEY);
+        }
+        return flashMessage;
     }
 }
